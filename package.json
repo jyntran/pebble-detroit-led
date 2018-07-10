@@ -1,0 +1,36 @@
+{
+  "name": "Detroit",
+  "author": "jyntran",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "Detroit",
+    "uuid": "26e92a39-b034-4da5-ad01-14dc9504e2ae",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "diorite"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "messageKeys": [
+      "dummy"
+    ],
+    "resources": {
+      "media": [
+        {
+          "file": "images/led_b.png",
+          "name": "IMAGE_LED_B",
+          "storageFormat": "png",
+          "targetPlatforms": null,
+          "type": "bitmap"
+        }
+      ]
+    }
+  }
+}
