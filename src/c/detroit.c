@@ -109,7 +109,7 @@ static void prv_window_load(Window *window) {
 
   window_set_background_color(s_window, GColorBlack);
 
-  s_led_blue_layer = bitmap_layer_create(GRect(0, 0, bounds.size.w, bounds.size.w));
+  s_led_blue_layer = bitmap_layer_create(GRect(0, 2, bounds.size.w, bounds.size.w-2));
   bitmap_layer_set_compositing_mode(s_led_blue_layer, GCompOpSet);
   s_bitmap_led_blue = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LED);
   bitmap_layer_set_bitmap(s_led_blue_layer, s_bitmap_led_blue);
