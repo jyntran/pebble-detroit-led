@@ -1,12 +1,12 @@
 {
-  "name": "Detroit",
+  "name": "Detroit LED",
   "author": "jyntran",
   "version": "1.0.0",
   "keywords": ["pebble-app"],
   "private": true,
   "dependencies": {},
   "pebble": {
-    "displayName": "Detroit",
+    "displayName": "Detroit LED",
     "uuid": "26e92a39-b034-4da5-ad01-14dc9504e2ae",
     "sdkVersion": "3",
     "enableMultiJS": true,
@@ -24,8 +24,15 @@
     "resources": {
       "media": [
         {
-          "file": "images/led_b.png",
-          "name": "IMAGE_LED_B",
+          "file": "images/led_blue.png",
+          "name": "IMAGE_LED_BLUE",
+          "storageFormat": "png",
+          "targetPlatforms": null,
+          "type": "bitmap"
+        },
+        {
+          "file": "images/led_red.png",
+          "name": "IMAGE_LED_RED",
           "storageFormat": "png",
           "targetPlatforms": null,
           "type": "bitmap"
