@@ -1,25 +1,21 @@
 #include <pebble.h>
 
-static Window *s_window;
-static TextLayer *s_time_layer,
-                 *s_date_layer,
-                 *s_batt_layer,
-                 *s_health_layer;
-static Layer *s_battery_layer;
-static BitmapLayer *s_led_blue_layer;
-static GBitmap *s_bitmap_led_blue;
-
-static int s_battery_level;
-
-#if defined(PBL_COLOR)
-  static BitmapLayer *s_led_red_layer;
-  static GBitmap *s_bitmap_led_red;
-#endif
+static Window      *s_window;
+static TextLayer   *s_time_layer,
+                   *s_date_layer,
+                   *s_batt_layer,
+                   *s_health_layer;
+static Layer       *s_battery_layer;
+static BitmapLayer *s_led_blue_layer,
+                   *s_led_red_layer;
+static GBitmap     *s_bitmap_led_blue,
+                   *s_bitmap_led_red;
+static int          s_battery_level;
 
 #if defined(PBL_HEALTH)
-  static int s_health_count;
+  static int        s_health_count;
 #endif
-  
+
 static void update_time() {
   time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
@@ -65,6 +61,18 @@ static void battery_update_proc(Layer *layer, GContext *ctx) {
   text_layer_set_text(s_batt_layer, s_buffer);
 }
 
+static void bluetooth_callback(bool connected) {
+  layer_set_hidden(bitmap_layer_get_layer(s_led_red_layer), connected);
+  if (!connected) {
+    static const uint32_t const segments[] = { 200, 200, 200, 200, 200 };
+    VibePattern pat = {
+      .durations = segments,
+      .num_segments = ARRAY_LENGTH(segments),
+    };
+    vibes_enqueue_custom_pattern(pat);
+  }
+}
+
 #if defined(PBL_HEALTH)
   static void update_health() {
     HealthMetric metric = HealthMetricWalkedDistanceMeters;
@@ -74,8 +82,8 @@ static void battery_update_proc(Layer *layer, GContext *ctx) {
     HealthServiceAccessibilityMask mask = health_service_metric_accessible(metric, 
       start, end);
 
-    if(mask & HealthServiceAccessibilityMaskAvailable) {
-      s_health_count = (int)health_service_sum_today(metric);
+    if (mask & HealthServiceAccessibilityMaskAvailable) {
+      s_health_count = (int) health_service_sum_today(metric);
       static char s_buffer[32];
       snprintf(s_buffer, sizeof(s_buffer), "%dm", s_health_count);    
       text_layer_set_text(s_health_layer, s_buffer);
@@ -95,24 +103,6 @@ static void battery_update_proc(Layer *layer, GContext *ctx) {
   }
 #endif
 
-static void bluetooth_callback(bool connected) {
-  #if defined(PBL_COLOR)
-    layer_set_hidden(bitmap_layer_get_layer(s_led_red_layer), connected);
-  #endif
-  if (!connected) {
-    #if defined(PBL_BW)
-      layer_set_hidden(bitmap_layer_get_layer(s_led_blue_layer), !connected);
-    #endif
-    static const uint32_t const segments[] = { 200, 200, 200, 200, 200 };
-    VibePattern pat = {
-      .durations = segments,
-      .num_segments = ARRAY_LENGTH(segments),
-    };
-    vibes_enqueue_custom_pattern(pat);
-  }
-}
-
-
 static void prv_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
@@ -121,17 +111,15 @@ static void prv_window_load(Window *window) {
 
   s_led_blue_layer = bitmap_layer_create(GRect(0, 0, bounds.size.w, bounds.size.w));
   bitmap_layer_set_compositing_mode(s_led_blue_layer, GCompOpSet);
-  s_bitmap_led_blue = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LED_BLUE);
+  s_bitmap_led_blue = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LED);
   bitmap_layer_set_bitmap(s_led_blue_layer, s_bitmap_led_blue);
   layer_add_child(window_layer, bitmap_layer_get_layer(s_led_blue_layer));
 
-  #if defined(PBL_COLOR)
-    s_led_red_layer = bitmap_layer_create(GRect(0, 0, bounds.size.w, bounds.size.w));
-    bitmap_layer_set_compositing_mode(s_led_red_layer, GCompOpSet);
-    s_bitmap_led_red = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LED_RED);
-    bitmap_layer_set_bitmap(s_led_red_layer, s_bitmap_led_red);
-    layer_add_child(window_layer, bitmap_layer_get_layer(s_led_red_layer));
-  #endif
+  s_led_red_layer = bitmap_layer_create(GRect(0, 0, bounds.size.w, bounds.size.w));
+  bitmap_layer_set_compositing_mode(s_led_red_layer, GCompOpSet);
+  s_bitmap_led_red = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LED_RED);
+  bitmap_layer_set_bitmap(s_led_red_layer, s_bitmap_led_red);
+  layer_add_child(window_layer, bitmap_layer_get_layer(s_led_red_layer));
 
   s_time_layer = text_layer_create(GRect(0, bounds.size.h-40, bounds.size.w-4, 40));
   text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_BITHAM_34_MEDIUM_NUMBERS));
@@ -188,12 +176,11 @@ static void prv_init(void) {
   connection_service_subscribe((ConnectionHandlers) {
     .pebble_app_connection_handler = bluetooth_callback
   });
+
   #if defined(PBL_HEALTH)
-  if(!health_service_events_subscribe(health_callback, NULL)) {
+  if (!health_service_events_subscribe(health_callback, NULL)) {
     APP_LOG(APP_LOG_LEVEL_ERROR, "Health not available!");
   }
-  #else
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Health not available!");
   #endif
 
   s_window = window_create();
@@ -206,9 +193,7 @@ static void prv_init(void) {
 }
 
 static void prv_deinit(void) {
-  #if defined(PBL_COLOR)
-    gbitmap_destroy(s_bitmap_led_red);
-  #endif
+  gbitmap_destroy(s_bitmap_led_red);
   gbitmap_destroy(s_bitmap_led_blue);
   text_layer_destroy(s_time_layer);
   text_layer_destroy(s_date_layer);

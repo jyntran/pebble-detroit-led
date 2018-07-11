@@ -24,10 +24,9 @@
     "resources": {
       "media": [
         {
-          "file": "images/led_blue.png",
-          "name": "IMAGE_LED_BLUE",
+          "file": "images/led.png",
+          "name": "IMAGE_LED",
           "storageFormat": "png",
-          "targetPlatforms": null,
           "type": "bitmap"
         },
         {
