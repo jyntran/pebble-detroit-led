@@ -15,6 +15,7 @@ static int          s_battery_level;
 
 #if defined(PBL_HEALTH)
   static int        s_health_count;
+  static int        s_health_count2;
 #endif
 
 static void update_time() {
@@ -79,16 +80,20 @@ static void bluetooth_callback(bool connected) {
 #if defined(PBL_HEALTH)
   static void update_health() {
     HealthMetric metric = HealthMetricWalkedDistanceMeters;
+    HealthMetric metric2 = HealthMetricStepCount;
     time_t start = time_start_of_today();
     time_t end = time(NULL);
 
     HealthServiceAccessibilityMask mask = health_service_metric_accessible(metric, 
       start, end);
+    HealthServiceAccessibilityMask mask2 = health_service_metric_accessible(metric, 
+      start, end);
 
-    if (mask & HealthServiceAccessibilityMaskAvailable) {
+    if (mask & mask2 & HealthServiceAccessibilityMaskAvailable) {
       s_health_count = (int) health_service_sum_today(metric);
-      static char s_buffer[32];
-      snprintf(s_buffer, sizeof(s_buffer), "%dm", s_health_count);    
+      s_health_count2 = (int) health_service_sum_today(metric2);
+      static char s_buffer[64];
+      snprintf(s_buffer, sizeof(s_buffer), "%dsteps\n%dm", s_health_count2, s_health_count);    
       text_layer_set_text(s_health_layer, s_buffer);
     } else {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Data unavailable!");
@@ -132,7 +137,7 @@ static void prv_window_load(Window *window) {
   update_time();
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
 
-  s_date_layer = text_layer_create(GRect(4, bounds.size.h-32, bounds.size.w, 32));
+  s_date_layer = text_layer_create(GRect(4, bounds.size.h-34, bounds.size.w, 32));
   text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
   text_layer_set_text_alignment(s_date_layer, GTextAlignmentLeft);
   text_layer_set_background_color(s_date_layer, GColorClear);
@@ -155,7 +160,7 @@ static void prv_window_load(Window *window) {
   bluetooth_callback(connection_service_peek_pebble_app_connection());
 
   #if defined(PBL_HEALTH)
-    s_health_layer = text_layer_create(GRect(bounds.size.w/2, 0, bounds.size.w/2-4, 24));
+    s_health_layer = text_layer_create(GRect(bounds.size.w/2, 0, bounds.size.w/2-4, 48));
     text_layer_set_font(s_health_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
     text_layer_set_text_alignment(s_health_layer, GTextAlignmentRight);
     text_layer_set_background_color(s_health_layer, GColorClear);
@@ -200,10 +205,7 @@ static void prv_init(void) {
 static void prv_deinit(void) {
   gbitmap_destroy(s_bitmap_led_red);
   gbitmap_destroy(s_bitmap_led_blue);
-  text_layer_destroy(s_time_layer);
-  text_layer_destroy(s_date_layer);
-  text_layer_destroy(s_batt_layer);
-  text_layer_destroy(s_health_layer);
+  bitmap_layer_destroy(s_led_red_layer);
   bitmap_layer_destroy(s_led_blue_layer);
   window_destroy(s_window);
   tick_timer_service_unsubscribe();
