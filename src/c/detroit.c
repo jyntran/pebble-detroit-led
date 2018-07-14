@@ -30,8 +30,8 @@ static void update_time() {
 static void update_date() {
   time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
-  static char s_buffer[16];
-  strftime(s_buffer, sizeof(s_buffer), "%b %e\n%Y", tick_time);
+  static char s_buffer[24];
+  strftime(s_buffer, sizeof(s_buffer), "%a\n%b %e\n%Y", tick_time);
   text_layer_set_text(s_date_layer, s_buffer);
 }
 
@@ -92,7 +92,7 @@ static void bluetooth_callback(bool connected) {
     if (mask & mask2 & HealthServiceAccessibilityMaskAvailable) {
       s_health_count = (int) health_service_sum_today(metric);
       s_health_count2 = (int) health_service_sum_today(metric2);
-      static char s_buffer[64];
+      static char s_buffer[32];
       snprintf(s_buffer, sizeof(s_buffer), "%dsteps\n%dm", s_health_count2, s_health_count);    
       text_layer_set_text(s_health_layer, s_buffer);
     } else {
@@ -117,7 +117,7 @@ static void prv_window_load(Window *window) {
 
   window_set_background_color(s_window, GColorBlack);
 
-  s_led_blue_layer = bitmap_layer_create(GRect(0, 2, bounds.size.w, bounds.size.w-2));
+  s_led_blue_layer = bitmap_layer_create(GRect(0, 0, bounds.size.w, bounds.size.w-2));
   bitmap_layer_set_compositing_mode(s_led_blue_layer, GCompOpSet);
   s_bitmap_led_blue = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LED);
   bitmap_layer_set_bitmap(s_led_blue_layer, s_bitmap_led_blue);
@@ -137,7 +137,7 @@ static void prv_window_load(Window *window) {
   update_time();
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
 
-  s_date_layer = text_layer_create(GRect(4, bounds.size.h-34, bounds.size.w, 32));
+  s_date_layer = text_layer_create(GRect(4, bounds.size.h-50, bounds.size.w, 62));
   text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
   text_layer_set_text_alignment(s_date_layer, GTextAlignmentLeft);
   text_layer_set_background_color(s_date_layer, GColorClear);

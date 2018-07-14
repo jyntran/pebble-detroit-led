@@ -37,7 +37,6 @@
           "file": "images/led_red.png",
           "name": "IMAGE_LED_RED",
           "storageFormat": "png",
-          "targetPlatforms": null,
           "type": "bitmap"
         }
       ]
