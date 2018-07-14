@@ -1,0 +1,21 @@
+[
+  {
+    "type": "heading",
+    "defaultValue": "Detroit LED Watchface"
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "toggle",
+        "messageKey": "ShowBatteryPercentage",
+        "label": "Show Battery Percentage",
+        "defaultValue": true
+      }
+    ]
+  },
+  {
+    "type": "submit",
+    "defaultValue": "Save Settings"
+  }
+]

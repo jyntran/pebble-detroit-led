@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include "settings.h"
 
 static Window      *s_window;
 static TextLayer   *s_time_layer,
@@ -56,9 +57,11 @@ static void battery_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_rect(ctx, GRect(0, 0, width, bounds.size.h), 0, GCornerNone);
 
-  static char s_buffer[8];
-  snprintf(s_buffer, sizeof(s_buffer), "%d%%", s_battery_level);
-  text_layer_set_text(s_batt_layer, s_buffer);
+  if (settings.ShowBatteryPercentage) {
+    static char s_buffer[8];
+    snprintf(s_buffer, sizeof(s_buffer), "%d%%", s_battery_level);
+    text_layer_set_text(s_batt_layer, s_buffer);
+  }
 }
 
 static void bluetooth_callback(bool connected) {
@@ -171,6 +174,8 @@ static void prv_window_unload(Window *window) {
 }
 
 static void prv_init(void) {
+  prv_load_settings();
+
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
   battery_state_service_subscribe(battery_callback);
   connection_service_subscribe((ConnectionHandlers) {

@@ -2,9 +2,13 @@
   "name": "Detroit LED",
   "author": "jyntran",
   "version": "1.0.0",
-  "keywords": ["pebble-app"],
+  "keywords": [
+    "pebble-app"
+  ],
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "pebble-clay": "^1.0.4"
+  },
   "pebble": {
     "displayName": "Detroit LED",
     "uuid": "26e92a39-b034-4da5-ad01-14dc9504e2ae",
@@ -19,7 +23,7 @@
       "watchface": true
     },
     "messageKeys": [
-      "dummy"
+      "ShowBatteryPercentage"
     ],
     "resources": {
       "media": [
