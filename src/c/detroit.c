@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include <ctype.h>
 #include "settings.h"
 
 static Window      *s_window;
@@ -18,6 +19,14 @@ static int          s_battery_level;
   static int        s_health_count2;
 #endif
 
+static void toUppercase(char *str) {
+  int i = 0;
+  while (str[i]) {
+    str[i] = toupper((unsigned char) str[i]);
+    i++;
+  }
+}
+
 static void update_time() {
   time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
@@ -31,7 +40,9 @@ static void update_date() {
   time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
   static char s_buffer[24];
-  strftime(s_buffer, sizeof(s_buffer), "%a\n%b %e\n%Y", tick_time);
+  strftime(s_buffer, sizeof(s_buffer), "%a\n%b %e", tick_time);
+
+  toUppercase(s_buffer);
   text_layer_set_text(s_date_layer, s_buffer);
 }
 
@@ -80,20 +91,17 @@ static void bluetooth_callback(bool connected) {
 #if defined(PBL_HEALTH)
   static void update_health() {
     HealthMetric metric = HealthMetricWalkedDistanceMeters;
-    HealthMetric metric2 = HealthMetricStepCount;
     time_t start = time_start_of_today();
     time_t end = time(NULL);
 
     HealthServiceAccessibilityMask mask = health_service_metric_accessible(metric, 
       start, end);
-    HealthServiceAccessibilityMask mask2 = health_service_metric_accessible(metric, 
-      start, end);
 
-    if (mask & mask2 & HealthServiceAccessibilityMaskAvailable) {
+    if (mask & HealthServiceAccessibilityMaskAvailable) {
       s_health_count = (int) health_service_sum_today(metric);
-      s_health_count2 = (int) health_service_sum_today(metric2);
       static char s_buffer[32];
-      snprintf(s_buffer, sizeof(s_buffer), "%dsteps\n%dm", s_health_count2, s_health_count);    
+      snprintf(s_buffer, sizeof(s_buffer), "%dm", s_health_count);    
+      toUppercase(s_buffer);
       text_layer_set_text(s_health_layer, s_buffer);
     } else {
       APP_LOG(APP_LOG_LEVEL_ERROR, "Data unavailable!");
@@ -137,8 +145,8 @@ static void prv_window_load(Window *window) {
   update_time();
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
 
-  s_date_layer = text_layer_create(GRect(4, bounds.size.h-50, bounds.size.w, 62));
-  text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+  s_date_layer = text_layer_create(GRect(4, bounds.size.h-34, bounds.size.w, 34));
+  text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   text_layer_set_text_alignment(s_date_layer, GTextAlignmentLeft);
   text_layer_set_background_color(s_date_layer, GColorClear);
   text_layer_set_text_color(s_date_layer, GColorWhite);
@@ -146,7 +154,7 @@ static void prv_window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
 
   s_batt_layer = text_layer_create(GRect(4, 4, bounds.size.w, 24));
-  text_layer_set_font(s_batt_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_font(s_batt_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
   text_layer_set_text_alignment(s_batt_layer, GTextAlignmentLeft);
   text_layer_set_background_color(s_batt_layer, GColorClear);
   text_layer_set_text_color(s_batt_layer, GColorWhite);
@@ -161,7 +169,7 @@ static void prv_window_load(Window *window) {
 
   #if defined(PBL_HEALTH)
     s_health_layer = text_layer_create(GRect(bounds.size.w/2, 0, bounds.size.w/2-4, 48));
-    text_layer_set_font(s_health_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+    text_layer_set_font(s_health_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
     text_layer_set_text_alignment(s_health_layer, GTextAlignmentRight);
     text_layer_set_background_color(s_health_layer, GColorClear);
     text_layer_set_text_color(s_health_layer, GColorWhite);
