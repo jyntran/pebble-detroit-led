@@ -2,6 +2,7 @@
 
 static void prv_default_settings() {
   settings.ShowBatteryPercentage = true;
+  settings.ShowDailyMetres = true;
 }
 
 static void prv_save_settings() {
@@ -9,11 +10,21 @@ static void prv_save_settings() {
 }
 
 static void prv_inbox_received_handler(DictionaryIterator *iter, void *context) {
-  Tuple *hvb_bool_t = dict_find(iter, MESSAGE_KEY_ShowBatteryPercentage);
-    if (hvb_bool_t) {
-      settings.ShowBatteryPercentage = hvb_bool_t->value->int32 == 1;
+  Tuple *battery_tuple = dict_find(iter, MESSAGE_KEY_ShowBatteryPercentage);
+  if (battery_tuple) {
+    settings.ShowBatteryPercentage = battery_tuple->value->int32 == 1;
+  }
+
+  Tuple *daily_metres_tuple = dict_find(iter, MESSAGE_KEY_ShowDailyMetres);
+  if (daily_metres_tuple) {
+    settings.ShowDailyMetres = daily_metres_tuple->value->int32 == 1;
   }
   
+  Tuple *temp_tuple = dict_find(iter, MESSAGE_KEY_WeatherTemperature);
+  if (temp_tuple) {
+    settings.WeatherTemperature = (int)temp_tuple->value->int32;
+  }
+
   prv_save_settings();
 }
 

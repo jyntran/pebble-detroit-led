@@ -6,7 +6,8 @@ static Window      *s_window;
 static TextLayer   *s_time_layer,
                    *s_date_layer,
                    *s_batt_layer,
-                   *s_health_layer;
+                   *s_health_layer,
+                   *s_weather_layer;
 static Layer       *s_battery_layer;
 static BitmapLayer *s_led_blue_layer,
                    *s_led_red_layer;
@@ -16,7 +17,6 @@ static int          s_battery_level;
 
 #if defined(PBL_HEALTH)
   static int        s_health_count;
-  static int        s_health_count2;
 #endif
 
 static void toUppercase(char *str) {
@@ -34,6 +34,14 @@ static void update_time() {
   strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ?
                                           "%H:%M" : "%I:%M", tick_time);
   text_layer_set_text(s_time_layer, s_buffer);
+
+  // Get weather update every 30 minutes
+  if (tick_time->tm_min % 30 == 0) {
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+    dict_write_uint8(iter, 0, 0);
+    app_message_outbox_send();
+  }
 }
 
 static void update_date() {
@@ -74,6 +82,12 @@ static void battery_update_proc(Layer *layer, GContext *ctx) {
     snprintf(s_buffer, sizeof(s_buffer), "%d%%", s_battery_level);
     text_layer_set_text(s_batt_layer, s_buffer);
   }
+}
+
+static void update_weather() {
+  static char s_buffer[8];
+  snprintf(s_buffer, sizeof(s_buffer), "%d°C", settings.WeatherTemperature);
+  text_layer_set_text(s_weather_layer, s_buffer);  
 }
 
 static void bluetooth_callback(bool connected) {
@@ -165,16 +179,26 @@ static void prv_window_load(Window *window) {
   layer_add_child(window_layer, s_battery_layer);
   battery_callback(battery_state_service_peek());
 
+  s_weather_layer = text_layer_create(GRect(bounds.size.w/2, 14, bounds.size.w/2-4, 24));
+  text_layer_set_font(s_weather_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+  text_layer_set_text_alignment(s_weather_layer, GTextAlignmentRight);
+  text_layer_set_background_color(s_weather_layer, GColorClear);
+  text_layer_set_text_color(s_weather_layer, GColorWhite);
+  update_weather();
+  layer_add_child(window_layer, text_layer_get_layer(s_weather_layer));
+
   bluetooth_callback(connection_service_peek_pebble_app_connection());
 
   #if defined(PBL_HEALTH)
-    s_health_layer = text_layer_create(GRect(bounds.size.w/2, 0, bounds.size.w/2-4, 48));
-    text_layer_set_font(s_health_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
-    text_layer_set_text_alignment(s_health_layer, GTextAlignmentRight);
-    text_layer_set_background_color(s_health_layer, GColorClear);
-    text_layer_set_text_color(s_health_layer, GColorWhite);
-    update_health();
-    layer_add_child(window_layer, text_layer_get_layer(s_health_layer));
+    if (settings.ShowDailyMetres) {
+      s_health_layer = text_layer_create(GRect(bounds.size.w/2, 0, bounds.size.w/2-4, 24));
+      text_layer_set_font(s_health_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+      text_layer_set_text_alignment(s_health_layer, GTextAlignmentRight);
+      text_layer_set_background_color(s_health_layer, GColorClear);
+      text_layer_set_text_color(s_health_layer, GColorWhite);
+      update_health();
+      layer_add_child(window_layer, text_layer_get_layer(s_health_layer));
+    }
   #endif
 }
 
@@ -183,6 +207,7 @@ static void prv_window_unload(Window *window) {
   text_layer_destroy(s_date_layer);
   text_layer_destroy(s_batt_layer);
   text_layer_destroy(s_health_layer);
+  text_layer_destroy(s_weather_layer);
   layer_destroy(s_battery_layer);
 }
 
@@ -196,9 +221,11 @@ static void prv_init(void) {
   });
 
   #if defined(PBL_HEALTH)
-  if (!health_service_events_subscribe(health_callback, NULL)) {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Health not available!");
-  }
+    if (settings.ShowDailyMetres) {
+      if (!health_service_events_subscribe(health_callback, NULL)) {
+        APP_LOG(APP_LOG_LEVEL_ERROR, "Health not available!");
+      }
+    }
   #endif
 
   s_window = window_create();

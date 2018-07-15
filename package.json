@@ -23,7 +23,9 @@
       "watchface": true
     },
     "messageKeys": [
-      "ShowBatteryPercentage"
+      "ShowBatteryPercentage",
+      "ShowDailyMetres",
+      "WeatherTemperature"
     ],
     "resources": {
       "media": [

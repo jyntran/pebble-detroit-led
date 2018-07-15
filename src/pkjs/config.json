@@ -11,6 +11,12 @@
         "messageKey": "ShowBatteryPercentage",
         "label": "Show Battery Percentage",
         "defaultValue": true
+      },
+      {
+        "type": "toggle",
+        "messageKey": "ShowDailyMetres",
+        "label": "Show Daily Metres Walked",
+        "defaultValue": true
       }
     ]
   },
